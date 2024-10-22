@@ -51,7 +51,7 @@ export class LadatpsServer {
                     sessionId: session_id,
                     data: []
                 });
-                this.session.set(request.responseHeader.data, {
+                this.session.set(request.responseHeader.end, {
                     type: "disconnect",
                     response: header.response,
                     dataId: request.responseHeader.data,
