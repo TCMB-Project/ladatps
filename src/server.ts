@@ -38,6 +38,7 @@ export type LadatpsResponse = {
 }
 
 const overworld = world.getDimension('overworld');
+const SEPARATOR = "_-(.)-_"
 
 export class LadatpsServer{
   private listenId: string;
@@ -65,7 +66,7 @@ export class LadatpsServer{
           status: 227,
           error: '',
           responseHeader: {
-            data: this.listenId+"_"+session_id+"_data_-(.)-_",
+            data: this.listenId+"_"+session_id+"_data"+SEPARATOR,
             end: this.listenId+"_"+session_id+"_end"
           },
           requestHeader: header
@@ -114,8 +115,8 @@ export class LadatpsServer{
         }
       }
     }else{
-      let eventId = event.id.split('_-(.)-_');
-      if(this.session.has(eventId[0])){
+      let eventId = event.id.split(SEPARATOR);
+      if(this.session.has(eventId[0]+SEPARATOR)){
         let session = this.session.get(eventId[0]);
         if(session.type == 'data'){
           let sequence = Number(eventId[1]);
