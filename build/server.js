@@ -24,13 +24,13 @@ export class LadatpsServer {
                 }
                 let session_id = randomId_no_duplication(this.sessionId);
                 let data_sessionId = this.listenId + "_" + session_id + "_data";
-                let end_sessionId = this.listenId + "_" + session_id + "_end";
+                let control_sessionId = this.listenId + "_" + session_id + "_ctrl";
                 let request = {
                     status: 227,
                     error: '',
                     responseHeader: {
                         data: data_sessionId + SEPARATOR,
-                        end: end_sessionId
+                        control: control_sessionId
                     },
                     requestHeader: header
                 };
@@ -45,17 +45,17 @@ export class LadatpsServer {
                     overworld.runCommandAsync(`/scriptevent ${header.response} ${JSON.stringify(response)}`);
                     return;
                 }
-                this.session.set(request.responseHeader.data.replace(SEPARATOR, ''), {
+                this.session.set(data_sessionId, {
                     type: "data",
                     response: header.response,
-                    disconnectId: end_sessionId,
+                    controlId: control_sessionId,
                     header: header,
                     mime: header.mime || 'text/plain',
                     sessionId: session_id,
                     data: []
                 });
-                this.session.set(request.responseHeader.end, {
-                    type: "disconnect",
+                this.session.set(control_sessionId, {
+                    type: "control",
                     response: header.response,
                     dataId: data_sessionId,
                     header: header,
@@ -93,29 +93,41 @@ export class LadatpsServer {
                     }
                     session.data[sequence] = event.message;
                 }
-                else if (session.type == 'disconnect') {
+                else if (session.type == 'control') {
+                    let message = JSON.parse(event.message);
                     let data_session = this.session.get(session.dataId);
-                    if (data_session.data.includes(undefined)) {
-                        let non_receive_index = data_session.data.findIndex((packet) => packet == undefined);
+                    if (message.type == "disconnect") {
+                        if (data_session.data.includes(undefined)) {
+                            let non_receive_index = data_session.data.findIndex((packet) => packet == undefined);
+                            let response = {
+                                status: 430,
+                                error: "Retransmission is required",
+                                header: {
+                                    sequence: [non_receive_index]
+                                }
+                            };
+                            overworld.runCommandAsync(`/scriptevent ${session.response} ${JSON.stringify(response)}`);
+                        }
+                        else {
+                            this.session.delete(session.dataId);
+                            this.session.delete(data_session.controlId);
+                            let response = {
+                                status: 221,
+                                header: {}
+                            };
+                            overworld.runCommandAsync(`/scriptevent ${session.response} ${JSON.stringify(response)}`);
+                            let data = session.data.join('');
+                            this.onReceive(session.header, data);
+                        }
+                    }
+                    else if (message.type == 'length') {
                         let response = {
-                            status: 430,
-                            error: "Retransmission is required",
+                            status: 213,
                             header: {
-                                sequence: [non_receive_index]
+                                length: data_session.data.length
                             }
                         };
                         overworld.runCommandAsync(`/scriptevent ${session.response} ${JSON.stringify(response)}`);
-                    }
-                    else {
-                        this.session.delete(session.dataId);
-                        this.session.delete(data_session.disconnectId);
-                        let response = {
-                            status: 221,
-                            header: {}
-                        };
-                        overworld.runCommandAsync(`/scriptevent ${session.response} ${JSON.stringify(response)}`);
-                        let data = session.data.join('');
-                        this.onReceive(session.header, data);
                     }
                 }
             }

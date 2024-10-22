@@ -1,4 +1,5 @@
-export { LadatpsServer, LadatpsResponse } from "./server";
+export { LadatpsServer } from "./server";
+export { LadatpsResponse } from "./functions";
 export { sendData } from "./client"
 
 export type LadatpsRequest = {
