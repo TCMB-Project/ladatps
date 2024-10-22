@@ -43,7 +43,7 @@ export class LadatpsServer {
                     overworld.runCommandAsync(`/scriptevent ${header.response} ${JSON.stringify(response)}`);
                     return;
                 }
-                this.session.set(request.responseHeader.data, {
+                this.session.set(request.responseHeader.data.replace(SEPARATOR, ''), {
                     type: "data",
                     response: header.response,
                     disconnectId: request.responseHeader.end,
@@ -76,7 +76,7 @@ export class LadatpsServer {
         }
         else {
             let eventId = event.id.split(SEPARATOR);
-            if (this.session.has(eventId[0] + SEPARATOR)) {
+            if (this.session.has(eventId[0])) {
                 let session = this.session.get(eventId[0]);
                 if (session.type == 'data') {
                     let sequence = Number(eventId[1]);
