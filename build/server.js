@@ -23,12 +23,14 @@ export class LadatpsServer {
                     return;
                 }
                 let session_id = randomId_no_duplication(this.sessionId);
+                let data_sessionId = this.listenId + "_" + session_id + "_data";
+                let end_sessionId = this.listenId + "_" + session_id + "_end";
                 let request = {
                     status: 227,
                     error: '',
                     responseHeader: {
-                        data: this.listenId + "_" + session_id + "_data" + SEPARATOR,
-                        end: this.listenId + "_" + session_id + "_end"
+                        data: data_sessionId + SEPARATOR,
+                        end: end_sessionId
                     },
                     requestHeader: header
                 };
@@ -46,7 +48,7 @@ export class LadatpsServer {
                 this.session.set(request.responseHeader.data.replace(SEPARATOR, ''), {
                     type: "data",
                     response: header.response,
-                    disconnectId: request.responseHeader.end,
+                    disconnectId: end_sessionId,
                     header: header,
                     mime: header.mime || 'text/plain',
                     sessionId: session_id,
@@ -55,7 +57,7 @@ export class LadatpsServer {
                 this.session.set(request.responseHeader.end, {
                     type: "disconnect",
                     response: header.response,
-                    dataId: request.responseHeader.data,
+                    dataId: data_sessionId,
                     header: header,
                     mime: header.mime || 'text/plain',
                     sessionId: session_id,
