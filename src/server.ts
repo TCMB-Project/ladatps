@@ -125,11 +125,16 @@ export class LadatpsServer{
               let data = session.data.join('');
               this.onReceive(session.header, data);
             }
-          }else if(message.type == 'length'){
+          }else if(message.type == 'status'){
+            let packet_loss = [];
+            for(let i=0; i<data_session.data.length; i++){
+              if(!data_session.data[i]) packet_loss.push(i);
+            }
             let response: LadatpsResponse = {
               status: 213,
               header: {
-                length: data_session.data.length
+                length: data_session.data.length,
+                loss: packet_loss
               }
             }
             overworld.runCommandAsync(`/scriptevent ${session.response} ${JSON.stringify(response)}`);

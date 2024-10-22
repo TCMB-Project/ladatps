@@ -40,6 +40,6 @@ export type LadatpsResponse = {
     [key: string]: any;
 };
 export type ControlMessage = {
-    type: "disconnect" | "length";
+    type: "disconnect" | "status";
     [key: string]: any;
 };
