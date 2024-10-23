@@ -64,10 +64,11 @@ export function sendData(id, data, option) {
                         }
                         let last_tick = system.currentTick;
                         let count = 0;
+                        let send_promises = [];
                         for (let i = 0; i < data_part.length; i++) {
                             let isSameTick = last_tick == system.currentTick;
                             if (isSameTick && count <= 4) {
-                                send_packet(data_sessionId + i.toString(), data_part[i]);
+                                send_promises.push(send_packet(data_sessionId + i.toString(), data_part[i]));
                                 count++;
                             }
                             else {
@@ -77,13 +78,35 @@ export function sendData(id, data, option) {
                             if (!isSameTick)
                                 last_tick = system.currentTick;
                         }
+                        await Promise.all(send_promises);
+                        await system.waitTicks(1);
+                        let status_req = {
+                            type: "status",
+                            symbol: 'status_request'
+                        };
+                        overworld.runCommandAsync(`scriptevent ${control_sessionId} ${JSON.stringify(status_req)}`);
                     }
                 }
             }
             else {
+                let message = JSON.parse(event.message);
+                if (between(message.status, 400, 599)) {
+                    console.error(JSON.stringify(message));
+                }
+                else if (message.status == 213 && message.header.symbol == 'status_request') {
+                    if (message.header.length == data_part.length && message.header.loss.length == 0) {
+                        let disconnect_req = {
+                            type: "disconnect"
+                        };
+                        overworld.runCommandAsync(`scriptevent ${control_sessionId} ${JSON.stringify(disconnect_req)}`);
+                    }
+                }
+                else if (message.status == 221) {
+                    resolve();
+                }
             }
         }, { namespaces: [namespace] });
-        overworld.runCommandAsync(`/scriptevent ${id} ${JSON.stringify(request)}`);
+        overworld.runCommandAsync(`scriptevent ${id} ${JSON.stringify(request)}`);
     });
 }
 //# sourceMappingURL=client.js.map

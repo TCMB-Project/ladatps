@@ -1,6 +1,6 @@
 import { CommandResult, ScriptEventCommandMessageAfterEvent, system, world } from "@minecraft/server"
 import { LadatpsRequest, LadatpsResponse } from ".";
-import { randomId, between } from "./functions";
+import { randomId, between, ControlMessage } from "./functions";
 import { byteLength } from "./encoding";
 
 const overworld = world.getDimension('overworld');
@@ -75,11 +75,12 @@ export function sendData(id: string, data: string, option?: LadatpsRequestOption
             }
             let last_tick = system.currentTick;
             let count = 0;
+            let send_promises: Promise<CommandResult>[] = [];
             for(let i=0; i < data_part.length; i++){
               let isSameTick = last_tick == system.currentTick;
 
               if(isSameTick && count <= 4){
-                send_packet(data_sessionId + i.toString(), data_part[i]);
+                send_promises.push(send_packet(data_sessionId + i.toString(), data_part[i]));
                 count++;
               }else{
                 await system.waitTicks(1);
@@ -87,13 +88,33 @@ export function sendData(id: string, data: string, option?: LadatpsRequestOption
               }
               if(!isSameTick) last_tick = system.currentTick;
             }
+            await Promise.all(send_promises);
+            await system.waitTicks(1);
+            let status_req: ControlMessage = {
+              type: "status",
+              symbol: 'status_request'
+            }
+            overworld.runCommandAsync(`scriptevent ${control_sessionId} ${JSON.stringify(status_req)}`);
           }
         }
       }else{
-
+        let message = JSON.parse(event.message) as LadatpsResponse;
+        if(between(message.status, 400, 599)){
+          console.error(JSON.stringify(message));
+          
+        }else if(message.status == 213 && message.header.symbol == 'status_request'){
+          if(message.header.length == data_part.length && message.header.loss.length == 0){
+            let disconnect_req: ControlMessage = {
+              type: "disconnect"
+            }
+            overworld.runCommandAsync(`scriptevent ${control_sessionId} ${JSON.stringify(disconnect_req)}`);
+          }
+        }else if(message.status == 221){
+          resolve();
+        }
       }
     }, {namespaces: [namespace]});
 
-    overworld.runCommandAsync(`/scriptevent ${id} ${JSON.stringify(request)}`);
+    overworld.runCommandAsync(`scriptevent ${id} ${JSON.stringify(request)}`);
   });
 }

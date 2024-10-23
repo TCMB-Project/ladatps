@@ -79,6 +79,7 @@ export type LadatpsResponse = {
     sequence?: number[]
     length?: number
     symbol?: string
+    loss?: number[]
     [key: string]: any
   }
   [key: string]: any
