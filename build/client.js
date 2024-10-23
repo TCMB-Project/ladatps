@@ -67,7 +67,7 @@ export function sendData(id, data, option) {
                         for (let i = 0; i < data_part.length; i++) {
                             let isSameTick = last_tick == system.currentTick;
                             if (isSameTick && count <= 4) {
-                                send_packet(data_sessionId, data_part[i]);
+                                send_packet(data_sessionId + i.toString(), data_part[i]);
                                 count++;
                             }
                             else {
