@@ -101,13 +101,28 @@ export function sendData(id: string, data: string, option?: LadatpsRequestOption
         let message = JSON.parse(event.message) as LadatpsResponse;
         if(between(message.status, 400, 599)){
           console.error(JSON.stringify(message));
-          
+
         }else if(message.status == 213 && message.header.symbol == 'status_request'){
           if(message.header.length == data_part.length && message.header.loss.length == 0){
             let disconnect_req: ControlMessage = {
               type: "disconnect"
             }
             overworld.runCommandAsync(`scriptevent ${control_sessionId} ${JSON.stringify(disconnect_req)}`);
+          }else{
+            if(message.header.length != data_part.length){
+              let sequence = data_part.length-1;
+              await send_packet(data_sessionId+sequence.toString(), data_part[sequence]);
+            }else{
+              for(const sequence of message.header.loss){
+                await send_packet(data_sessionId+sequence.toString(), data_part[sequence]);
+              }
+            }
+            
+            let status_req: ControlMessage = {
+              type: "status",
+              symbol: 'status_request'
+            }
+            overworld.runCommandAsync(`scriptevent ${control_sessionId} ${JSON.stringify(status_req)}`);
           }
         }else if(message.status == 221){
           resolve();

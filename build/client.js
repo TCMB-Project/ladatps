@@ -100,6 +100,22 @@ export function sendData(id, data, option) {
                         };
                         overworld.runCommandAsync(`scriptevent ${control_sessionId} ${JSON.stringify(disconnect_req)}`);
                     }
+                    else {
+                        if (message.header.length != data_part.length) {
+                            let sequence = data_part.length - 1;
+                            await send_packet(data_sessionId + sequence.toString(), data_part[sequence]);
+                        }
+                        else {
+                            for (const sequence of message.header.loss) {
+                                await send_packet(data_sessionId + sequence.toString(), data_part[sequence]);
+                            }
+                        }
+                        let status_req = {
+                            type: "status",
+                            symbol: 'status_request'
+                        };
+                        overworld.runCommandAsync(`scriptevent ${control_sessionId} ${JSON.stringify(status_req)}`);
+                    }
                 }
                 else if (message.status == 221) {
                     resolve();
