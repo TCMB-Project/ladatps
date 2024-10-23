@@ -78,11 +78,13 @@ export type LadatpsResponse = {
     control?: string,
     sequence?: number[]
     length?: number
+    symbol?: string
     [key: string]: any
   }
   [key: string]: any
 }
 export type ControlMessage = {
   type: "disconnect" | "status"
+  symbol?: string
   [key: string]: any
 }

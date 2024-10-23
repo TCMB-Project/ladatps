@@ -103,7 +103,8 @@ export class LadatpsServer {
                                 status: 430,
                                 error: "Retransmission is required",
                                 header: {
-                                    sequence: [non_receive_index]
+                                    sequence: [non_receive_index],
+                                    symbol: message.symbol
                                 }
                             };
                             overworld.runCommandAsync(`/scriptevent ${session.response} ${JSON.stringify(response)}`);
@@ -113,6 +114,7 @@ export class LadatpsServer {
                             this.session.delete(data_session.controlId);
                             let response = {
                                 status: 221,
+                                symbol: message.symbol,
                                 header: {}
                             };
                             overworld.runCommandAsync(`/scriptevent ${session.response} ${JSON.stringify(response)}`);
@@ -129,6 +131,7 @@ export class LadatpsServer {
                         let response = {
                             status: 213,
                             header: {
+                                symbol: message.symbol,
                                 length: data_session.data.length,
                                 loss: packet_loss
                             }
