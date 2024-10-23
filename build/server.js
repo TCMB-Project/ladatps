@@ -116,7 +116,7 @@ export class LadatpsServer {
                                 header: {}
                             };
                             overworld.runCommandAsync(`/scriptevent ${session.response} ${JSON.stringify(response)}`);
-                            let data = session.data.join('');
+                            let data = data_session.data.join('');
                             this.onReceive(session.header, data);
                         }
                     }
