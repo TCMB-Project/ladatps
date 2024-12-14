@@ -1,5 +1,5 @@
 import { CommandResult, ScriptEventCommandMessageAfterEvent, system, world } from "@minecraft/server"
-import { LadatpsRequest, LadatpsResponse } from ".";
+import { LadatpsRequestHeader, LadatpsResponse } from ".";
 import { randomId, between, ControlMessage } from "./functions";
 import { byteLength } from "./encoding";
 
@@ -38,7 +38,7 @@ export function sendData(id: string, data: string, option?: LadatpsRequestOption
     }else{
       response_id = randomId()+':'+randomId()+randomId();
     }
-    let request: LadatpsRequest = {
+    let request: LadatpsRequestHeader = {
       response: response_id
     }
     if(typeof option == "object" && option.header){
