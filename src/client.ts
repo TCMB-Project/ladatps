@@ -8,10 +8,10 @@ const packet_size = 650;
 const extend_packet_size = 300;
 const max_packet_size = 1850;
 
-export type LadatpsRequestOption = {
-  response_id: string,
-  header: {
-    mime: string
+type LadatpsRequestOption = {
+  response_id?: string,
+  header?: {
+    mime?: string
     [key: string]: any
   }
 }
