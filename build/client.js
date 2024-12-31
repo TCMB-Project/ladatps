@@ -46,6 +46,11 @@ export function sendData(id, data, option) {
                     system.afterEvents.scriptEventReceive.unsubscribe(se_receive);
                     return;
                 }
+                else if (response.status == 221) {
+                    resolve();
+                    system.afterEvents.scriptEventReceive.unsubscribe(se_receive);
+                    return;
+                }
                 else {
                     if (response.status == 227) {
                         connected = true;
