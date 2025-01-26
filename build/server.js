@@ -26,6 +26,7 @@ export class LadatpsServer {
                 let data_sessionId = this.listenId + "_" + session_id + "_data";
                 let control_sessionId = this.listenId + "_" + session_id + "_ctrl";
                 let request = {
+                    id: event.id,
                     status: 227,
                     error: '',
                     responseHeader: {

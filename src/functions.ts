@@ -62,6 +62,7 @@ export type Header = {
 }
 
 export type LadatpsRequest = {
+  id: string,
   status: number
   error: string  
   responseHeader: {

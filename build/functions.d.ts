@@ -19,6 +19,7 @@ export type Header = {
     [key: string]: any;
 };
 export type LadatpsRequest = {
+    id: string;
     status: number;
     error: string;
     responseHeader: {
