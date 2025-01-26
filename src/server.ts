@@ -98,7 +98,7 @@ export class LadatpsServer{
             return;
           }
 
-          session.data[sequence] = event.message;
+          session.data[sequence] = session.header.addition_char?event.message.substring(1):event.message;
         }else if(session.type == 'control'){
           let message = JSON.parse(event.message) as ControlMessage;
           let data_session = this.session.get(session.dataId);

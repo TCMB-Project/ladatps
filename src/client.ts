@@ -1,6 +1,6 @@
 import { CommandResult, ScriptEventCommandMessageAfterEvent, system, world } from "@minecraft/server"
-import { LadatpsRequestHeader, LadatpsResponse } from ".";
-import { randomId, between, ControlMessage } from "./functions";
+import { LadatpsResponse } from ".";
+import { randomId, between, ControlMessage, Header } from "./functions";
 import { byteLength } from "./encoding";
 
 const overworld = world.getDimension('overworld');
@@ -38,8 +38,9 @@ export function sendData(id: string, data: string, option?: LadatpsRequestOption
     }else{
       response_id = randomId()+':'+randomId()+randomId();
     }
-    let request: LadatpsRequestHeader = {
-      response: response_id
+    let request: Header = {
+      response: response_id,
+      addition_char: true
     }
     if(typeof option == "object" && option.header){
       request = Object.assign(request, option.header);
@@ -77,6 +78,7 @@ export function sendData(id: string, data: string, option?: LadatpsRequestOption
               }
               data_part.push(sliced);
             }
+            // send data
             let last_tick = system.currentTick;
             let count = 0;
             let send_promises: Promise<CommandResult>[] = [];
@@ -84,7 +86,7 @@ export function sendData(id: string, data: string, option?: LadatpsRequestOption
               let isSameTick = last_tick == system.currentTick;
 
               if(isSameTick && count <= 4){
-                send_promises.push(send_packet(data_sessionId + i.toString(), data_part[i]));
+                send_promises.push(send_packet(data_sessionId + i.toString(), request.addition_char?`"${data_part[i]}`:data_part[i]));
                 count++;
               }else{
                 await system.waitTicks(1);
@@ -104,21 +106,26 @@ export function sendData(id: string, data: string, option?: LadatpsRequestOption
       }else{
         let message = JSON.parse(event.message) as LadatpsResponse;
         if(between(message.status, 400, 599)){
+          // error message
           console.error(JSON.stringify(message));
 
         }else if(message.status == 213 && message.header.symbol == 'status_request'){
           if(message.header.length == data_part.length && message.header.loss.length == 0){
+            // success
             let disconnect_req: ControlMessage = {
               type: "disconnect"
             }
             overworld.runCommandAsync(`scriptevent ${control_sessionId} ${JSON.stringify(disconnect_req)}`);
           }else{
+            // packet loss
             if(message.header.length != data_part.length){
+              // data length is not same
               let sequence = data_part.length-1;
-              await send_packet(data_sessionId+sequence.toString(), data_part[sequence]);
+              await send_packet(data_sessionId+sequence.toString(), request.addition_char?`"${data_part[sequence]}`:data_part[sequence]);
             }else{
+              // resend loss packet
               for(const sequence of message.header.loss){
-                await send_packet(data_sessionId+sequence.toString(), data_part[sequence]);
+                await send_packet(data_sessionId+sequence.toString(), request.addition_char?`"${data_part[sequence]}`:data_part[sequence]);
               }
             }
             

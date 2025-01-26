@@ -92,7 +92,7 @@ export class LadatpsServer {
                         overworld.runCommandAsync(`/scriptevent ${session.response} ${JSON.stringify(response)}`);
                         return;
                     }
-                    session.data[sequence] = event.message;
+                    session.data[sequence] = session.header.addition_char ? event.message.substring(1) : event.message;
                 }
                 else if (session.type == 'control') {
                     let message = JSON.parse(event.message);
