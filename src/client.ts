@@ -16,20 +16,6 @@ type LadatpsRequestOption = {
   }
 }
 
-async function send_packet(id: string, packet: string): Promise<CommandResult>{
-  let sent: boolean = false;
-  while(!sent){
-    try{
-      let result = await overworld.runCommandAsync(`scriptevent ${id} ${packet}`);
-      sent = true;
-
-      return result;
-    }catch(e){
-      await system.waitTicks(2);
-    }
-  }
-}
-
 export function sendData(id: string, data: string, option?: LadatpsRequestOption): Promise<void>{
   return new Promise((resolve, reject)=>{
     let response_id: string;
@@ -85,22 +71,21 @@ export function sendData(id: string, data: string, option?: LadatpsRequestOption
             for(let i=0; i < data_part.length; i++){
               let isSameTick = last_tick == system.currentTick;
 
-              if(isSameTick && count <= 4){
-                send_promises.push(send_packet(data_sessionId + i.toString(), request.addition_char?`"${data_part[i]}`:data_part[i]));
+              if(isSameTick && count <= 16){
+                system.sendScriptEvent(data_sessionId + i.toString(), request.addition_char?`"${data_part[i]}`:data_part[i]);
                 count++;
               }else{
                 await system.waitTicks(1);
-                last_tick = system.currentTick;
+                count = 0;
               }
               if(!isSameTick) last_tick = system.currentTick;
             }
-            await Promise.all(send_promises);
             await system.waitTicks(1);
             let status_req: ControlMessage = {
               type: "status",
               symbol: 'status_request'
             }
-            overworld.runCommandAsync(`scriptevent ${control_sessionId} ${JSON.stringify(status_req)}`);
+            system.sendScriptEvent(control_sessionId, JSON.stringify(status_req));
           }
         }
       }else{
@@ -115,17 +100,17 @@ export function sendData(id: string, data: string, option?: LadatpsRequestOption
             let disconnect_req: ControlMessage = {
               type: "disconnect"
             }
-            overworld.runCommandAsync(`scriptevent ${control_sessionId} ${JSON.stringify(disconnect_req)}`);
+            system.sendScriptEvent(control_sessionId, JSON.stringify(disconnect_req));
           }else{
             // packet loss
             if(message.header.length != data_part.length){
               // data length is not same
               let sequence = data_part.length-1;
-              await send_packet(data_sessionId+sequence.toString(), request.addition_char?`"${data_part[sequence]}`:data_part[sequence]);
+              system.sendScriptEvent(data_sessionId+sequence.toString(), request.addition_char?`"${data_part[sequence]}`:data_part[sequence]);
             }else{
               // resend loss packet
               for(const sequence of message.header.loss){
-                await send_packet(data_sessionId+sequence.toString(), request.addition_char?`"${data_part[sequence]}`:data_part[sequence]);
+                system.sendScriptEvent(data_sessionId+sequence.toString(), request.addition_char?`"${data_part[sequence]}`:data_part[sequence]);
               }
             }
             
@@ -133,7 +118,7 @@ export function sendData(id: string, data: string, option?: LadatpsRequestOption
               type: "status",
               symbol: 'status_request'
             }
-            overworld.runCommandAsync(`scriptevent ${control_sessionId} ${JSON.stringify(status_req)}`);
+            system.sendScriptEvent(control_sessionId, JSON.stringify(status_req));
           }
         }else if(message.status == 221){
           resolve();
@@ -141,6 +126,6 @@ export function sendData(id: string, data: string, option?: LadatpsRequestOption
       }
     }, {namespaces: [namespace]});
 
-    overworld.runCommandAsync(`scriptevent ${id} ${JSON.stringify(request)}`);
+    system.sendScriptEvent(id, JSON.stringify(request));
   });
 }

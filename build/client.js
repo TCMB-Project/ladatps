@@ -5,19 +5,6 @@ const overworld = world.getDimension('overworld');
 const packet_size = 650;
 const extend_packet_size = 300;
 const max_packet_size = 1850;
-async function send_packet(id, packet) {
-    let sent = false;
-    while (!sent) {
-        try {
-            let result = await overworld.runCommandAsync(`scriptevent ${id} ${packet}`);
-            sent = true;
-            return result;
-        }
-        catch (e) {
-            await system.waitTicks(2);
-        }
-    }
-}
 export function sendData(id, data, option) {
     return new Promise((resolve, reject) => {
         let response_id;
@@ -74,24 +61,23 @@ export function sendData(id, data, option) {
                         let send_promises = [];
                         for (let i = 0; i < data_part.length; i++) {
                             let isSameTick = last_tick == system.currentTick;
-                            if (isSameTick && count <= 4) {
-                                send_promises.push(send_packet(data_sessionId + i.toString(), request.addition_char ? `"${data_part[i]}` : data_part[i]));
+                            if (isSameTick && count <= 16) {
+                                system.sendScriptEvent(data_sessionId + i.toString(), request.addition_char ? `"${data_part[i]}` : data_part[i]);
                                 count++;
                             }
                             else {
                                 await system.waitTicks(1);
-                                last_tick = system.currentTick;
+                                count = 0;
                             }
                             if (!isSameTick)
                                 last_tick = system.currentTick;
                         }
-                        await Promise.all(send_promises);
                         await system.waitTicks(1);
                         let status_req = {
                             type: "status",
                             symbol: 'status_request'
                         };
-                        overworld.runCommandAsync(`scriptevent ${control_sessionId} ${JSON.stringify(status_req)}`);
+                        system.sendScriptEvent(control_sessionId, JSON.stringify(status_req));
                     }
                 }
             }
@@ -107,26 +93,26 @@ export function sendData(id, data, option) {
                         let disconnect_req = {
                             type: "disconnect"
                         };
-                        overworld.runCommandAsync(`scriptevent ${control_sessionId} ${JSON.stringify(disconnect_req)}`);
+                        system.sendScriptEvent(control_sessionId, JSON.stringify(disconnect_req));
                     }
                     else {
                         // packet loss
                         if (message.header.length != data_part.length) {
                             // data length is not same
                             let sequence = data_part.length - 1;
-                            await send_packet(data_sessionId + sequence.toString(), request.addition_char ? `"${data_part[sequence]}` : data_part[sequence]);
+                            system.sendScriptEvent(data_sessionId + sequence.toString(), request.addition_char ? `"${data_part[sequence]}` : data_part[sequence]);
                         }
                         else {
                             // resend loss packet
                             for (const sequence of message.header.loss) {
-                                await send_packet(data_sessionId + sequence.toString(), request.addition_char ? `"${data_part[sequence]}` : data_part[sequence]);
+                                system.sendScriptEvent(data_sessionId + sequence.toString(), request.addition_char ? `"${data_part[sequence]}` : data_part[sequence]);
                             }
                         }
                         let status_req = {
                             type: "status",
                             symbol: 'status_request'
                         };
-                        overworld.runCommandAsync(`scriptevent ${control_sessionId} ${JSON.stringify(status_req)}`);
+                        system.sendScriptEvent(control_sessionId, JSON.stringify(status_req));
                     }
                 }
                 else if (message.status == 221) {
@@ -134,7 +120,7 @@ export function sendData(id, data, option) {
                 }
             }
         }, { namespaces: [namespace] });
-        overworld.runCommandAsync(`scriptevent ${id} ${JSON.stringify(request)}`);
+        system.sendScriptEvent(id, JSON.stringify(request));
     });
 }
 //# sourceMappingURL=client.js.map

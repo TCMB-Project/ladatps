@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@minecraft/server": "^1.14.0"
+    "@minecraft/server": "^1.18.0"
   }
 }

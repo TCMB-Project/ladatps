@@ -43,7 +43,7 @@ export class LadatpsServer {
                         error: request.error,
                         header: {}
                     };
-                    overworld.runCommandAsync(`/scriptevent ${header.response} ${JSON.stringify(response)}`);
+                    system.sendScriptEvent(header.response, JSON.stringify(response));
                     return;
                 }
                 this.session.set(data_sessionId, {
@@ -68,7 +68,7 @@ export class LadatpsServer {
                     status: request.status,
                     header: request.responseHeader
                 };
-                overworld.runCommandAsync(`/scriptevent ${header.response} ${JSON.stringify(response)}`);
+                system.sendScriptEvent(header.response, JSON.stringify(response));
             }
             catch (error) {
                 if (typeof header != "object") {
@@ -89,7 +89,7 @@ export class LadatpsServer {
                             error: 'invalid sequence number',
                             header: {}
                         };
-                        overworld.runCommandAsync(`/scriptevent ${session.response} ${JSON.stringify(response)}`);
+                        system.sendScriptEvent(session.response, JSON.stringify(response));
                         return;
                     }
                     session.data[sequence] = session.header.addition_char ? event.message.substring(1) : event.message;
@@ -108,7 +108,7 @@ export class LadatpsServer {
                                     symbol: message.symbol
                                 }
                             };
-                            overworld.runCommandAsync(`/scriptevent ${session.response} ${JSON.stringify(response)}`);
+                            system.sendScriptEvent(session.response, JSON.stringify(response));
                         }
                         else {
                             this.session.delete(session.dataId);
@@ -118,7 +118,7 @@ export class LadatpsServer {
                                 symbol: message.symbol,
                                 header: {}
                             };
-                            overworld.runCommandAsync(`/scriptevent ${session.response} ${JSON.stringify(response)}`);
+                            system.sendScriptEvent(session.response, JSON.stringify(response));
                             let data = data_session.data.join('');
                             this.onReceive(session.header, data);
                         }
@@ -137,7 +137,7 @@ export class LadatpsServer {
                                 loss: packet_loss
                             }
                         };
-                        overworld.runCommandAsync(`/scriptevent ${session.response} ${JSON.stringify(response)}`);
+                        system.sendScriptEvent(session.response, JSON.stringify(response));
                     }
                 }
             }
